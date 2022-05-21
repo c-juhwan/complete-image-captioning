@@ -14,6 +14,7 @@ def main(args):
     start_time = time.time()
 
     # Check if the path exists
+    check_path(args.preprocess_path)
     check_path(args.data_path)
     check_path(args.checkpoint_path)
     check_path(args.model_path)
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('--training', action='store_true',
                         help='Run training.')
     parser.add_argument('--training_resume', action='store_true',
-                        help='Resume training.')
+                        help='Resume training from existing checkpoint.')
     parser.add_argument('--testing', action='store_true',
                         help='Run testing.')
 
@@ -64,7 +65,10 @@ if __name__ == '__main__':
     parser.add_argument('--data_valid_image_path', type=str, default='./dataset/val2017/',
                         help='Path to the validation images folder')
     parser.add_argument('--data_test_image_path', type=str, default='./dataset/test2017/',
-                        help='Path to the validation images folder')
+                        help='Path to the test images folder')
+    # Preprocessing - Save pkl path
+    parser.add_argument('--save_preprocessed_data_path', type=str, default='./preprocessing/processed_coco_data.pkl',
+                        help='Path to save preprocessed data')
     # Preprocessing - Caption txt path
     parser.add_argument('--data_train_caption_path', type=str, default='./preprocessing/train_captions.txt',
                         help='Path to the train captions file after preprocessing')
@@ -89,8 +93,10 @@ if __name__ == '__main__':
     parser.add_argument('--trg_max_len', default=20, type=int,
                         help='Maximum length of target sequence; Default is 20')
     # Preprocessing - Image preprocessing config
-    parser.add_argument('--resize_image_size', type=int, default=256,
+    parser.add_argument('--image_resize_size', type=int, default=256,
                         help='Size of resized image after preprocessing.')
+    parser.add_argument('--image_crop_size', type=int, default=224,
+                        help='Size of cropped image after preprocessing.')
     parser.add_argument('--resize_image_path', type=str, default='./preprocessing/',
                         help='Path to the resized images folder.')
 
@@ -128,7 +134,14 @@ if __name__ == '__main__':
     parser.add_argument('--lr_lambda', default=0.95, type=float,
                         help="Lambda learning scheduler's lambda; Default is 0.95")
 
-    # Training
+    # Training - Data path after preprocessing
+    parser.add_argument('--preprocessed_train_image_path', type=str, default='./preprocessing/train/',
+                        help='Path to the preprocessed train images folder')
+    parser.add_argument('--preprocessed_valid_image_path', type=str, default='./preprocessing/valid/',
+                        help='Path to the preprocessed validation images folder')
+    parser.add_argument('--preprocessed_test_image_path', type=str, default='./preprocessing/test/',
+                        help='Path to the preprocessed test images folder')
+    # Training - Config
     parser.add_argument('--num_epochs', default=10, type=int, 
                         help='Training epochs; Default is 10')
     parser.add_argument('--num_workers', default=2, type=int, 
@@ -141,8 +154,6 @@ if __name__ == '__main__':
                         help="Ralamb's weight decay; Default is 1e-5")
     parser.add_argument('--clip_grad_norm', default=5, type=int, 
                         help='Graddient clipping norm; Default is 5')
-    parser.add_argument('--crop_size', default=224, type=int,
-                        help='Image crop size; Default is 224')
 
     # Testing
     parser.add_argument('--test_batch_size', default=32, type=int, 

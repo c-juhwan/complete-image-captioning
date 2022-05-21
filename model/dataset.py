@@ -34,20 +34,25 @@ class CocoDataset(data.Dataset):
         # Convert caption to word ids & add <bos> and <eos>
         caption_id = self.sp.EncodeAsIds(caption)
         caption_id = torch.Tensor(caption_id)
-        caption_id = torch.cat([torch.Tensor([self.sp.bos_id()]), caption_id, torch.Tensor([self.sp.eos_id()])])
-        caption_id = caption_id.long()
 
-        # Get valid length of caption, except padding
+        # Get valid length of caption, without padding
         length = len(caption_id)
         length = torch.Tensor([length]).long()
 
         # Pad caption to max_seq_len
-        if self.min_seq_len <= len(caption_id) <= self.max_seq_len:
-            caption_id = torch.cat([caption_id, torch.zeros(self.max_seq_len - len(caption_id)).long()])
+        caption_tensor = torch.zeros(self.max_seq_len).long()
+        caption_tensor[0] = torch.Tensor([self.sp.bos_id()])
+        caption_tensor[-1] = torch.Tensor([self.sp.eos_id()])
+        if length < self.max_seq_len:
+            caption_tensor[1:length+1] = caption_id
+        else: # If caption is longer than max_seq_len, truncate it
+            caption_tensor[1:] = caption_id[:self.max_seq_len-1]
+
+        assert caption_tensor.shape[0] == self.max_seq_len
 
         data_dict = {
             'image': image,
-            'caption_id': caption_id,
+            'caption_id': caption_tensor,
             'length': length
         }
         return data_dict

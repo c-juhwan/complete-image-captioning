@@ -38,7 +38,7 @@ class Decoder(nn.Module):
         self.decoder_linear2 = nn.Linear(embed_dim * 4, vocab_size)
         self.out = nn.Sequential(self.decoder_linear1, self.activation, self.decoder_linear2)
 
-    def forward(self, features, caption_ids, lengths):
+    def forward(self, features, caption_ids):
         decoder_embedding = self.embed(caption_ids) # (batch_size, max_seq_len, embed_dim)
         features = features.unsqueeze(1) # (batch_size, 1, embed_dim)
         features = features.repeat(1, decoder_embedding.size(1), 1) # (batch_size, max_seq_len, embed_dim)
@@ -57,7 +57,7 @@ class Decoder(nn.Module):
             decoder_input = torch.cat((features, decoder_embedding), dim=2) # (batch_size, max_seq_len, embed_dim * 2)
             decoder_input = decoder_input.permute(1, 0, 2) # (max_seq_len, batch_size, embed_dim * 2)
 
-            decoder_input = pack_padded_sequence(decoder_input, lengths, batch_first=False)
+            decoder_input = pack_padded_sequence(decoder_input, self.get_non_pad_length(caption_ids), batch_first=False)
             decoder_output, _ = self.decoder(decoder_input) # decoder_output: (max_seq_len, batch_size, bidirectional * hidden_dim)
             decoder_output, _ = torch.nn.utils.rnn.pad_packed_sequence(decoder_output, total_length=self.max_seq_len-1, batch_first=False)
         
@@ -67,6 +67,9 @@ class Decoder(nn.Module):
         decoder_logits = self.out(decoder_output) # (batch_size, max_seq_len, vocab_size)
 
         return decoder_logits
+
+    def get_non_pad_length(self, caption_ids:torch.Tensor):
+        return caption_ids.ne(0).sum(dim=1)
 
     @staticmethod
     def generate_square_subsequent_mask(sz, device):

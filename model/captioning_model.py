@@ -17,7 +17,7 @@ class CaptioningModel(nn.Module):
                                num_layers=num_layers, bidirectional=bidirectional, 
                                vocab_size=vocab_size, max_seq_len=max_seq_len)
     
-    def forward(self, images:torch.Tensor, caption_ids:torch.Tensor, lengths:int):
+    def forward(self, images:torch.Tensor, caption_ids:torch.Tensor):
         """
         Args:
             images (torch.Tensor): [batch_size, 3, 224, 224]
@@ -26,7 +26,7 @@ class CaptioningModel(nn.Module):
         """
 
         features = self.encoder(images) # (batch_size, output_dim)
-        logits = self.decoder(features, caption_ids, lengths) # (batch_size, max_seq_length, vocab_size)
+        logits = self.decoder(features, caption_ids) # (batch_size, max_seq_length, vocab_size)
         log_prob = F.log_softmax(logits, dim=-1) # (batch_size, max_seq_length, vocab_size)
         
         return log_prob

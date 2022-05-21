@@ -4,6 +4,7 @@ checkpoint/
 models/
 dataset/
 tensorboard_runs/
+preprocessing/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

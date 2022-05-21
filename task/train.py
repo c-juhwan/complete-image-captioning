@@ -51,7 +51,7 @@ def training(args:argparse.Namespace):
                                      std=[0.229, 0.224, 0.225])
     """
     transform = transforms.Compose([ 
-        transforms.RandomCrop(args.crop_size), # crop 224x224 from 256x256 image
+        transforms.RandomCrop(args.image_crop_size), # crop 224x224 from 256x256 image
         transforms.RandomHorizontalFlip(), 
         transforms.RandomVerticalFlip(),
         transforms.ToTensor(), 
@@ -116,9 +116,6 @@ def training(args:argparse.Namespace):
             # Train - Get batched data
             images = datas_dicts['images'].to(device, non_blocking=True)
             caption_ids = datas_dicts['caption_ids'].to(device, non_blocking=True)
-            lengths = datas_dicts['lengths'].to(device, non_blocking=True)
-            lengths = lengths.squeeze(1) # (batch_size)
-            lengths = lengths - 1 # (batch_size)
 
             # Train - Define target
             targets = caption_ids[:, 1:] # (batch_size, max_seq_len-1), remove <bos>
@@ -128,7 +125,7 @@ def training(args:argparse.Namespace):
 
             # Train - Forward
             with autocast():
-                output_probs = model(images, caption_ids[:, :-1], lengths) # (batch_size, max_seq_length-1, vocab_size), remove <eos>
+                output_probs = model(images, caption_ids[:, :-1]) # (batch_size, max_seq_length-1, vocab_size), remove <eos>
                 output_probs = output_probs.view(-1, output_probs.size(-1)) # (batch_size * max_seq_length-1, vocab_size)
 
                 loss = criterion(output_probs, targets)
