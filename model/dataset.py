@@ -43,10 +43,10 @@ class CocoDataset(data.Dataset):
         caption_tensor = torch.zeros(self.max_seq_len).long()
         caption_tensor[0] = torch.Tensor([self.sp.bos_id()])
         caption_tensor[-1] = torch.Tensor([self.sp.eos_id()])
-        if length < self.max_seq_len:
+        if length < self.max_seq_len-1:
             caption_tensor[1:length+1] = caption_id
         else: # If caption is longer than max_seq_len, truncate it
-            caption_tensor[1:] = caption_id[:self.max_seq_len-1]
+            caption_tensor[1:self.max_seq_len-1] = caption_id[:self.max_seq_len-2]
 
         assert caption_tensor.shape[0] == self.max_seq_len
 

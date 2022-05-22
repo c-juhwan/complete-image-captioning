@@ -28,9 +28,9 @@ class Encoder(nn.Module):
             self.extractor_out_dim = effnet.classifier[1].in_features
             self.extractor = nn.Sequential(*modules)
         elif self.encoder_type == 'vit_b_16':
-            vit = models.vit_b_16(pretrained=encoder_pretrained)
-            modules = list(vit.children())[:-1]
-            self.extractor_out_dim = vit.heads[0].in_features
+            self.vit = models.vit_b_16(pretrained=encoder_pretrained)
+            modules = list(self.vit.children())[:-1]
+            self.extractor_out_dim = self.vit.heads[0].in_features
             self.extractor = nn.Sequential(*modules)
         else:
             raise NotImplementedError(f'Encoder type {encoder_type} is not implemented')
@@ -42,8 +42,21 @@ class Encoder(nn.Module):
         self.out = nn.Sequential(self.encoder_linear1, self.activation, self.encoder_linear2)
 
     def forward(self, images:torch.Tensor) -> torch.Tensor:
-        with torch.no_grad():
-            features = self.extractor(images)
+        if self.encoder_type == 'vit_b_16':
+            with torch.no_grad():
+                encoder = self.extractor[1]
+                processed_img = self.vit._process_input(images)
+
+                n = processed_img.shape[0]
+                # Expand the class token to the full batch
+                batch_class_token = self.vit.class_token.expand(n, -1, -1)
+                processed_img = torch.cat([batch_class_token, processed_img], dim=1)
+
+                encoded_img = encoder(processed_img)
+                features = encoded_img[:, 0]
+        else:
+            with torch.no_grad():
+                features = self.extractor(images)
         features = features.view(features.size(0), -1) # Flatten to (batch_size, features_dim)
         features = self.out(features) # (batch_size, output_dim)
 
