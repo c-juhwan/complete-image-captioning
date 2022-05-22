@@ -29,7 +29,7 @@ def train_spm_model(args:argparse.Namespace):
     spm.SentencePieceProcessor()
     spm.SentencePieceTrainer.Train(
         f'--input={args.data_train_caption_path} --model_prefix={args.spm_model_path}spm_model_{args.vocab_size} '
-        f'--vocab_size={args.vocab_size} --character_coverage=0.9995 --split_by_whitespace=true '
+        f'--vocab_size={args.vocab_size} --character_coverage=1.0 --split_by_whitespace=true '
         f'--pad_id={args.pad_id} --unk_id={args.unk_id} --bos_id={args.bos_id} --eos_id={args.eos_id} '
         f'--model_type={args.sentencepiece_model}'
     )
@@ -118,7 +118,7 @@ def resize_images(args:argparse.Namespace):
         for i, image in enumerate(tqdm(images[split], total=len(images[split]), desc="Resizing images from %s" % image_paths[split])):
             with open(os.path.join(image_paths[split], image), 'rb') as f:
                 img = Image.open(f)
-                img = img.resize((args.resize_image_size, args.resize_image_size), Image.ANTIALIAS)
+                img = img.resize((args.image_resize_size, args.image_resize_size), Image.ANTIALIAS)
                 img.save(os.path.join(output_paths[split], image), img.format)
 
 def preprocessing(args:argparse.Namespace):

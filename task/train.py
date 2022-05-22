@@ -61,9 +61,9 @@ def training(args:argparse.Namespace):
     # Load data
     write_log(logger, "Loading data")
     dataset_dict, dataloader_dict = {}, {}
-    dataset_dict['train'] = CocoDataset(args.data_train_image_path, args.data_train_annotation_path, args.spm_model_path,
+    dataset_dict['train'] = CocoDataset(args.resize_image_path + 'train/', args.data_train_annotation_path, args.spm_model_path,
                                         vocab_size=args.vocab_size, transform=transform)
-    dataset_dict['valid'] = CocoDataset(args.data_valid_image_path, args.data_valid_annotation_path, args.spm_model_path,
+    dataset_dict['valid'] = CocoDataset(args.resize_image_path + 'valid/' , args.data_valid_annotation_path, args.spm_model_path,
                                         vocab_size=args.vocab_size, transform=transform)
                                     
     dataloader_dict['train'] = DataLoader(dataset_dict['train'], batch_size=args.batch_size, num_workers=args.num_workers,
@@ -166,18 +166,18 @@ def training(args:argparse.Namespace):
         for iter_idx, data_dicts in enumerate(tqdm(dataloader_dict['valid'], total=len(dataloader_dict['valid']),
                                                    desc=f'Validation - Epoch [{epoch_idx}/{args.num_epochs}]')):
             # Validation - Get batched data
-            images = data_dicts['image'].to(device, non_blocking=True)
-            caption_ids = data_dicts['caption_id'].to(device, non_blocking=True)
-            lengths = data_dicts['length'].to(device, non_blocking=True)
+            images = data_dicts['images'].to(device, non_blocking=True)
+            caption_ids = data_dicts['caption_ids'].to(device, non_blocking=True)
 
             # Validation - Define target
             targets = caption_ids[:, 1:] # (batch_size, max_seq_len-1), remove <bos>
-            non_pad = targets != args.pad_id
-            targets = targets[non_pad].contiguous().view(-1) # (batch_size*max_seq_len-1)
+            #non_pad = targets != args.pad_id
+            #targets = targets[non_pad].contiguous().view(-1) # (batch_size*max_seq_len-1)
+            targets = targets.contiguous().view(-1) # (batch_size*max_seq_len-1)
 
             # Validation - Forward
             with torch.no_grad():
-                output_probs = model(images, caption_ids[:, :-1], lengths) # (batch_size, max_seq_length-1, vocab_size), remove <eos>
+                output_probs = model(images, caption_ids[:, :-1]) # (batch_size, max_seq_length-1, vocab_size), remove <eos>
                 output_probs = output_probs.view(-1, output_probs.size(-1)) # (batch_size * max_seq_length-1, vocab_size)
 
                 loss = criterion(output_probs, targets)
@@ -220,7 +220,7 @@ def training(args:argparse.Namespace):
 
         # Validation - Log to tensorboard
         if args.use_tensorboard:
-            writer.add_scalar('VALID/Loss', valid_loss.item(),
+            writer.add_scalar('VALID/Loss', valid_loss,
                               epoch_idx)
             writer.add_scalar('VALID/Accuracy', valid_accuracy * 100,
                               epoch_idx)

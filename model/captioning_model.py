@@ -6,7 +6,7 @@ from .decoder import Decoder
 
 class CaptioningModel(nn.Module):
     def __init__(self, embed_dim:int=256, encoder_type:str='resnet152', encoder_pretrained:bool=True,
-                decoder_type:str='gru', hidden_dim:int=512, nhead:int=8, num_layers:int=1, bidirectional:bool=True,
+                decoder_type:str='gru', hidden_dim:int=256, nhead:int=8, num_layers:int=1, bidirectional:bool=True,
                 vocab_size:int=8000, max_seq_len:int=8000, dropout:float=0.3):
         super(CaptioningModel, self).__init__()
 

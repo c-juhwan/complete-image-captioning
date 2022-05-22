@@ -113,8 +113,8 @@ if __name__ == '__main__':
                         help='Decoder type; Default is gru')
     parser.add_argument('--decoder_embed_dim', default=256, type=int,
                         help='Decoder embedding dimension == encoder output dimension; Default is 256')
-    parser.add_argument('--decoder_hidden_dim', default=512, type=int,
-                        help='Decoder hidden dimension; If decoder_type==transformer, then d_model; Default is 512')
+    parser.add_argument('--decoder_hidden_dim', default=256, type=int,
+                        help='Decoder hidden dimension; If decoder_type==transformer, then d_model; Default is 256')
     parser.add_argument('--decoder_nhead', default=8, type=int,
                         help='Decoder nhead for decoder_type==transformer; Default is 8')
     parser.add_argument('--decoder_num_layers', default=1, type=int,
